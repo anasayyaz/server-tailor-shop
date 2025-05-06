@@ -13,10 +13,14 @@ exports.createCustomer = async (req, res) => {
 
 // Get all customers
 exports.getCustomers = async (req, res) => {
-  const customers = await Customer.find().populate('suits.suitType');
+  try {
+    const customers = await Customer.find().populate('suits.suitType');
   res.json(customers);
+  } catch (error) {
+    return res.status(500).send({message: "error "})
+  }
+  
 };
-
 // Get single customer by phone
 exports.getCustomerByPhone = async (req, res) => {
   const customer = await Customer.findOne({ phone: req.params.phone }).populate('suits.suitType');
