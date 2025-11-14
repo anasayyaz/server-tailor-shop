@@ -27,7 +27,7 @@ exports.updateSuitType = async (req, res) => {
 exports.deleteSuitType = async (req, res) => {
   try {
     await SuitType.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Deleted' });
+    res.json({ message: 'حذف ہو گیا' });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }

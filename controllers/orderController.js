@@ -1,9 +1,56 @@
 const Order = require('../models/Order');
+const Customer = require('../models/Customer');
+
+// Validation helper
+const validateOrderData = (data) => {
+  const errors = [];
+  if (!data.customerId && !data.customer) {
+    errors.push('گاہک کا آئی ڈی درج کرنا ضروری ہے');
+  }
+  if (!data.assignedEmployee) {
+    errors.push('ملازم منتخب کرنا ضروری ہے');
+  }
+  if (!data.suitDetails || !Array.isArray(data.suitDetails) || data.suitDetails.length === 0) {
+    errors.push('کم از کم ایک سوٹ کی تفصیل درج کرنا ضروری ہے');
+  }
+  return errors;
+};
 
 exports.createOrder = async (req, res) => {
   try {
-    const order = new Order(req.body);
+    // Validate input
+    const validationErrors = validateOrderData(req.body);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ message: validationErrors.join(', ') });
+    }
+
+    // Map customerId to customer field for model compatibility
+    const orderData = {
+      ...req.body,
+      customer: req.body.customerId || req.body.customer,
+    };
+    
+    // Remove fields that shouldn't be in the model
+    delete orderData.customerId;
+    delete orderData.customerPhone;
+    delete orderData.customerName;
+
+    // Verify customer exists
+    if (orderData.customer) {
+      const customer = await Customer.findById(orderData.customer);
+      if (!customer) {
+        return res.status(404).json({ message: 'گاہک نہیں ملا' });
+      }
+    }
+
+    const order = new Order(orderData);
     await order.save();
+    
+    // Populate before returning
+    await order.populate('customer');
+    await order.populate('assignedEmployee');
+    await order.populate('suitDetails.suitType');
+    
     res.status(201).json(order);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -11,19 +58,69 @@ exports.createOrder = async (req, res) => {
 };
 
 exports.getOrders = async (req, res) => {
-  const orders = await Order.find()
-    .populate('customer')
-    .populate('assignedEmployee')
-    .populate('suitDetails.suitType');
-  res.json(orders);
+  try {
+    const orders = await Order.find()
+      .populate('customer')
+      .populate('assignedEmployee')
+      .populate('suitDetails.suitType');
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 exports.deleteOrder = async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Order deleted successfully' });
+    res.json({ message: 'آرڈر کامیابی سے حذف ہو گیا' });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.updateOrder = async (req, res) => {
+  try {
+    // Validate input
+    const validationErrors = validateOrderData(req.body);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ message: validationErrors.join(', ') });
+    }
+
+    // Map customerId to customer field for model compatibility
+    const updateData = {
+      ...req.body,
+      customer: req.body.customerId || req.body.customer,
+    };
+    
+    // Remove fields that shouldn't be in the model
+    delete updateData.customerId;
+    delete updateData.customerPhone;
+    delete updateData.customerName;
+
+    // Verify customer exists if being updated
+    if (updateData.customer) {
+      const customer = await Customer.findById(updateData.customer);
+      if (!customer) {
+        return res.status(404).json({ message: 'گاہک نہیں ملا' });
+      }
+    }
+
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    )
+      .populate('customer')
+      .populate('assignedEmployee')
+      .populate('suitDetails.suitType');
+
+    if (!order) {
+      return res.status(404).json({ message: 'آرڈر نہیں ملا' });
+    }
+
+    res.json(order);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 };
 
@@ -35,7 +132,7 @@ exports.getOrderById = async (req, res) => {
       .populate('suitDetails.suitType');
 
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      return res.status(404).json({ message: 'آرڈر نہیں ملا' });
     }
 
     res.json(order);

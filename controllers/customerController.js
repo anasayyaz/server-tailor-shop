@@ -1,10 +1,29 @@
 const Customer = require('../models/Customer');
 
+// Validation helper
+const validateCustomerData = (data) => {
+  const errors = [];
+  if (!data.name || data.name.trim() === '') {
+    errors.push('نام درج کرنا ضروری ہے');
+  }
+  if (!data.phone || data.phone.trim() === '') {
+    errors.push('موبائل نمبر درج کرنا ضروری ہے');
+  }
+  return errors;
+};
+
 // Create customer
 exports.createCustomer = async (req, res) => {
   try {
+    // Validate input
+    const validationErrors = validateCustomerData(req.body);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ message: validationErrors.join(', ') });
+    }
+
     const customer = new Customer(req.body);
     await customer.save();
+    await customer.populate('suits.suitType');
     res.status(201).json(customer);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -15,23 +34,45 @@ exports.createCustomer = async (req, res) => {
 exports.getCustomers = async (req, res) => {
   try {
     const customers = await Customer.find().populate('suits.suitType');
-  res.json(customers);
-  } catch (error) {
-    return res.status(500).send({message: "error "})
+    res.json(customers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-  
 };
+
 // Get single customer by phone
 exports.getCustomerByPhone = async (req, res) => {
-  const customer = await Customer.findOne({ phone: req.params.phone }).populate('suits.suitType');
-  if (customer) res.json(customer);
-  else res.status(404).json({ message: 'Customer not found' });
+  try {
+    const customer = await Customer.findOne({ phone: req.params.phone }).populate('suits.suitType');
+    if (customer) {
+      res.json(customer);
+    } else {
+      res.status(404).json({ message: 'گاہک نہیں ملا' });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // Update customer
 exports.updateCustomer = async (req, res) => {
   try {
-    const updated = await Customer.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    // Validate input
+    const validationErrors = validateCustomerData(req.body);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ message: validationErrors.join(', ') });
+    }
+
+    const updated = await Customer.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    ).populate('suits.suitType');
+
+    if (!updated) {
+      return res.status(404).json({ message: 'گاہک نہیں ملا' });
+    }
+
     res.json(updated);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -41,9 +82,12 @@ exports.updateCustomer = async (req, res) => {
 // Delete customer
 exports.deleteCustomer = async (req, res) => {
   try {
-    await Customer.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Deleted' });
+    const customer = await Customer.findByIdAndDelete(req.params.id);
+    if (!customer) {
+      return res.status(404).json({ message: 'گاہک نہیں ملا' });
+    }
+    res.json({ message: 'حذف ہو گیا' });
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };

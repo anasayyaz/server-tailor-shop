@@ -5,13 +5,15 @@ const {
   getEmployees,
   addExpense,
   getEmployee,
-  deleteEmployee 
+  deleteEmployee,
+  updateEmployee
 } = require('../controllers/employeeController');
 
 router.post('/', createEmployee);
 router.get('/', getEmployees);
-router.post('/:id/expense', addExpense);
 router.get('/:id', getEmployee);
-router.delete('/:id', deleteEmployee); // ✅ Add this line
+router.put('/:id', updateEmployee);
+router.post('/:id/expense', addExpense);
+router.delete('/:id', deleteEmployee);
 
 module.exports = router;
