@@ -8,7 +8,9 @@ const suitTypeSchema = new mongoose.Schema({
       sizes: [
         {
           name: { type: String, required: true }, // e.g. "Length"
-          value: { type: Number} // e.g. 42
+          type: { type: String, enum: ['text', 'checkbox', 'dropdown'], default: 'text' }, // Size field type
+          value: { type: mongoose.Schema.Types.Mixed }, // For text: string/number, for checkbox: boolean, for dropdown: selected value
+          options: [{ type: String }] // For dropdown: array of options
         }
       ]
     }

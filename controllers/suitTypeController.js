@@ -17,7 +17,16 @@ exports.getSuitTypes = async (req, res) => {
 
 exports.updateSuitType = async (req, res) => {
   try {
-    const updated = await SuitType.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await SuitType.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: 'سوٹ کی قسم نہیں ملی' });
+    }
+
     res.json(updated);
   } catch (err) {
     res.status(400).json({ message: err.message });

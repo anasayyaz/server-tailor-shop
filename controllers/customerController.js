@@ -1,26 +1,10 @@
 const Customer = require('../models/Customer');
 
-// Validation helper
-const validateCustomerData = (data) => {
-  const errors = [];
-  if (!data.name || data.name.trim() === '') {
-    errors.push('نام درج کرنا ضروری ہے');
-  }
-  if (!data.phone || data.phone.trim() === '') {
-    errors.push('موبائل نمبر درج کرنا ضروری ہے');
-  }
-  return errors;
-};
+// Validation disabled: allow flexible input (strings permitted)
 
 // Create customer
 exports.createCustomer = async (req, res) => {
   try {
-    // Validate input
-    const validationErrors = validateCustomerData(req.body);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ message: validationErrors.join(', ') });
-    }
-
     const customer = new Customer(req.body);
     await customer.save();
     await customer.populate('suits.suitType');
@@ -57,12 +41,6 @@ exports.getCustomerByPhone = async (req, res) => {
 // Update customer
 exports.updateCustomer = async (req, res) => {
   try {
-    // Validate input
-    const validationErrors = validateCustomerData(req.body);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ message: validationErrors.join(', ') });
-    }
-
     const updated = await Customer.findByIdAndUpdate(
       req.params.id,
       req.body,

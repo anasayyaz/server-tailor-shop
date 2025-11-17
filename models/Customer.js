@@ -13,7 +13,7 @@ const customerSchema = new mongoose.Schema({
           sizes: [
             {
               name: String,
-              value: Number,
+              value: mongoose.Schema.Types.Mixed,
             },
           ],
         },
@@ -23,6 +23,5 @@ const customerSchema = new mongoose.Schema({
 }, {
   timestamps: true // ✅ optional but useful for createdAt tracking
 });
-;
 
 module.exports = mongoose.model('Customer', customerSchema);

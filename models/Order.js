@@ -11,7 +11,7 @@ const orderSchema = new mongoose.Schema({
           sizes: [
             {
               name: String,
-              value: Number,
+              value: mongoose.Schema.Types.Mixed,
             },
           ],
         },

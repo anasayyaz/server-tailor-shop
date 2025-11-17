@@ -1,29 +1,10 @@
 const Order = require('../models/Order');
 const Customer = require('../models/Customer');
 
-// Validation helper
-const validateOrderData = (data) => {
-  const errors = [];
-  if (!data.customerId && !data.customer) {
-    errors.push('گاہک کا آئی ڈی درج کرنا ضروری ہے');
-  }
-  if (!data.assignedEmployee) {
-    errors.push('ملازم منتخب کرنا ضروری ہے');
-  }
-  if (!data.suitDetails || !Array.isArray(data.suitDetails) || data.suitDetails.length === 0) {
-    errors.push('کم از کم ایک سوٹ کی تفصیل درج کرنا ضروری ہے');
-  }
-  return errors;
-};
+// Validation disabled: allow flexible input (strings permitted)
 
 exports.createOrder = async (req, res) => {
   try {
-    // Validate input
-    const validationErrors = validateOrderData(req.body);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ message: validationErrors.join(', ') });
-    }
-
     // Map customerId to customer field for model compatibility
     const orderData = {
       ...req.body,
@@ -80,12 +61,6 @@ exports.deleteOrder = async (req, res) => {
 
 exports.updateOrder = async (req, res) => {
   try {
-    // Validate input
-    const validationErrors = validateOrderData(req.body);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ message: validationErrors.join(', ') });
-    }
-
     // Map customerId to customer field for model compatibility
     const updateData = {
       ...req.body,

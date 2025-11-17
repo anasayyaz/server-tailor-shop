@@ -1,26 +1,10 @@
 const Employee = require("../models/Employee");
 
-// Validation helper
-const validateEmployeeData = (data) => {
-  const errors = [];
-  if (!data.name || data.name.trim() === '') {
-    errors.push('نام درج کرنا ضروری ہے');
-  }
-  if (!data.phone || data.phone.trim() === '') {
-    errors.push('موبائل نمبر درج کرنا ضروری ہے');
-  }
-  return errors;
-};
+// Validation disabled: allow flexible input (strings permitted)
 
 // Create employee
 exports.createEmployee = async (req, res) => {
   try {
-    // Validate input
-    const validationErrors = validateEmployeeData(req.body);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ message: validationErrors.join(', ') });
-    }
-
     const employee = new Employee(req.body);
     await employee.save();
     res.status(201).json(employee);
@@ -42,12 +26,6 @@ exports.getEmployees = async (req, res) => {
 // Update employee
 exports.updateEmployee = async (req, res) => {
   try {
-    // Validate input
-    const validationErrors = validateEmployeeData(req.body);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ message: validationErrors.join(', ') });
-    }
-
     const employee = await Employee.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -67,10 +45,6 @@ exports.updateEmployee = async (req, res) => {
 // Add expense to employee
 exports.addExpense = async (req, res) => {
   try {
-    if (!req.body.amount || req.body.amount <= 0) {
-      return res.status(400).json({ message: 'خرچ کی درست رقم درج کرنا ضروری ہے' });
-    }
-
     const employee = await Employee.findById(req.params.id);
     if (!employee) {
       return res.status(404).json({ message: 'ملازم نہیں ملا' });
