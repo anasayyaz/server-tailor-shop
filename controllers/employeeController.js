@@ -16,7 +16,46 @@ exports.createEmployee = async (req, res) => {
 // Get all employees
 exports.getEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find();
+    const { startDate, endDate, employeeId } = req.query;
+    
+    let employees = await Employee.find();
+    
+    // Filter by employee ID if provided
+    if (employeeId && employeeId !== 'all') {
+      employees = employees.filter(emp => emp._id.toString() === employeeId);
+    }
+    
+    // Filter expenses by date range if provided
+    if (startDate || endDate) {
+      employees = employees.map(employee => {
+        const filteredExpenses = (employee.expenses || []).filter(expense => {
+          if (!expense.date) return false;
+          const expenseDate = new Date(expense.date);
+          
+          if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            // Set end date to end of day
+            end.setHours(23, 59, 59, 999);
+            return expenseDate >= start && expenseDate <= end;
+          } else if (startDate) {
+            const start = new Date(startDate);
+            return expenseDate >= start;
+          } else if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            return expenseDate <= end;
+          }
+          return true;
+        });
+        
+        return {
+          ...employee.toObject(),
+          expenses: filteredExpenses
+        };
+      });
+    }
+    
     res.json(employees);
   } catch (err) {
     res.status(500).json({ message: err.message });
