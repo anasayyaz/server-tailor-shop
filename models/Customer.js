@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const customerSchema = new mongoose.Schema({
   name: String,
   phone: String,
-  serialNumber: String, // ✅ NEW FIELD
+  serialNumber: String,
+  rawSpeechInput: String, // Original speech text from voice input
   suits: [
     {
       suitType: { type: mongoose.Schema.Types.ObjectId, ref: 'SuitType' },
@@ -21,7 +22,7 @@ const customerSchema = new mongoose.Schema({
     },
   ],
 }, {
-  timestamps: true // ✅ optional but useful for createdAt tracking
+  timestamps: true
 });
 
 module.exports = mongoose.model('Customer', customerSchema);
